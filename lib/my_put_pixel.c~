@@ -1,0 +1,233 @@
+/*
+** my_put_pixel.c for my_put_pixel in /home/telenc_r/rendu/wolf
+** 
+** Made by telenc_r
+** Login   <telenc_r@telenc>
+** 
+** Started on  Wed Jan  2 16:00:38 2013 telenc_r
+** Last update Sun Jan 13 15:13:13 2013 telenc_r
+*/
+
+#include	<stdlib.h>
+#include	<mlx.h>
+#include	"wolf.h"
+
+void    my_put_pixel_img(t_wolf *fdf, int x, int y, unsigned long color)
+{
+  int   i;
+
+  i = 0;
+  if (y > 0 && x > 0 && y < HEIGHT && x < WIDTH)
+    {
+      while (i < fdf->bpp/8 )
+        {
+          fdf->data[(fdf->size_line * y) + (x * fdf->bpp/8) + i] = color;
+          color = color>>8;
+          i++;
+        }
+    }
+}
+
+int	is_alpha(t_f_point *p_w, t_wall *wall, t_wolf *fdf)
+{
+  int	i;
+  int	ok;
+  int	size_line;
+  int	bpp;
+  char *data;
+
+  data = wall->texture->data;
+  size_line = wall->texture->size_line;
+  bpp = wall->texture->bpp;
+  ok = 0;
+  i = 0;
+  if (data[(size_line *(int)p_w->y) + ((int)p_w->x * bpp/8) + i++] == 255)
+    ok = 1;
+  while (i < fdf->bpp/8 )
+    if (data[(size_line *(int)p_w->y) + ((int)p_w->x * bpp/8) + i++] != 0)
+      ok = 0;
+  return (ok);
+}
+
+void		display_px(t_wall *wall, t_f_point *pw, t_wolf *wo, t_i_point *pf)
+{
+  int		i;
+  int		size_line;
+  int		omb;
+  int		size_img;
+  t_image	*t;
+
+  t = wall->texture;
+  omb = -50;
+  if (wall->type_shoot == 2)
+    omb = 0;
+  i = 0;
+  while (i < wo->bpp/8)
+    {
+      size_line = (t->size_line *(int)pw->y) + ((int)pw->x * t->bpp/8) + i;
+      size_img = (wo->size_line * pf->y) + (pf->x * wo->bpp/8) + i;
+      if (t->data[size_line] + omb > 0 && i < 4)
+	wo->data[size_img] = t->data[size_line] + omb;
+      else
+	wo->data[size_img] = t->data[size_line];
+      i = i + 1;
+    }
+}
+
+void		my_put_pixel_img_wall(t_wolf *wo, int x, int y, t_wall *wall)
+{
+  t_image	*t;
+  int		i;
+  t_f_point	pw;
+  int		size_line;
+  int		ok;
+  int		omb;
+  t_i_point	pf;
+
+  pf.x = x;
+  pf.y = y;
+  t = wall->texture;
+  pw.x = (wall->y_shoot - (int)(wall->y_shoot)) * 512;
+  if (wall->type_shoot == 2)
+    pw.x = (wall->x_shoot - (int)(wall->x_shoot)) * 512;
+  pw.y = y - ((WIDTH / 2) - wall->height_wall) + 100;
+  pw.y = (512 / wall->height_wall) / 2 * pw.y;
+  if (pw.y >= 512 || pw.y < 0)
+    pw.y = 0;
+  ok = is_alpha(&pw, wall, wo);
+  i = 0;
+  if (pf.y > 0 && ok == 0 && pf.x > 0 && pf.y < HEIGHT && pf.x < WIDTH)
+    display_px(wall, &pw, wo, &pf);
+}
+
+int	is_alpha_img(int x, int y, t_image *img_src, t_i_point *point)
+{
+  int	size_line;
+  int	bpp;
+  char *data;
+  int   i;
+  int	ok;
+
+  size_line = img_src->size_line;
+  bpp = img_src->bpp;
+  data = img_src->data;
+  i = 0;
+  ok = 0;
+  if (point->y >= 0 && point->x >= 0 && y < HEIGHT && x < WIDTH)
+    {
+      if (data[(size_line *(int)point->y) + ((int)point->x
+					     * bpp/8) + i++] != 0)
+	ok = 1;
+      while (i < img_src->bpp/8 )
+	if (data[(size_line *(int)point->y) + ((int)point->x
+					       * bpp/8) + i++] != 0)
+	  ok = 0;
+    }
+  return (ok);
+}
+
+int	img_to_img_two(t_i_point *p_img, t_i_point *pos,
+		       t_image *img, t_wolf *wolf)
+{
+  int	ok;
+  int	s_l;
+  int	i;
+  int	num;
+
+  while (p_img->y < 512)
+    {
+      ok = is_alpha_img(pos->x, pos->y, img, p_img);
+      i = 0;
+      if (pos->y > 0 && ok == 0 && pos->x > 0 &&
+	  pos->y < HEIGHT && pos->x < WIDTH)
+	while (i < wolf->bpp/8 )
+	  {
+	    s_l = (img->size_line *(int)p_img->y) + ((int)p_img->x
+						     * img->bpp/8) + i;
+	    num = (wolf->size_line * pos->y) + (pos->x * wolf->bpp/8) + i++;
+	    if (num >= 0 && s_l >= 0)
+	      wolf->data[num] = img->data[s_l];
+	  }
+      if (wolf->k < 0)
+	return (0);
+      p_img->y += 512 / (HEIGHT / (2*wolf->k));
+      pos->y += 1;
+    }
+}
+
+int		my_put_img_to_img(t_image *img, t_wolf *wolf, t_i_point *p, float k)
+{
+  t_i_point	*p_img;
+  t_i_point	*pos;
+  t_f_point	*vector;
+  t_wall	*wall;
+
+  wolf->k = k;
+  p_img = my_malloc(sizeof(t_i_point));
+  pos = my_malloc(sizeof(t_i_point));
+  pos->x = p->x - ((HEIGHT / (2 * k))/2);
+  p_img->x = 0;
+  while (p_img->x < 512)
+    {
+      vector = get_vector_directory(wolf, pos->x);
+      if (pos->x > WIDTH)
+	return (0);
+      wall = get_wall(vector, wolf, 1);
+      if (wall->height_wall > k)
+	{
+	  p_img->y = 0;
+	  pos->y = (HEIGHT/2);
+	  img_to_img_two(p_img, pos, img, wolf);
+	}
+      p_img->x +=  512 / (HEIGHT / (2*k));
+      pos->x += 1;
+    }
+}
+
+void		put_all_img_two(int x, t_image *img, t_wolf *wolf, t_i_point *p)
+{
+  int		y;
+  t_i_point	pos;
+  int		ok;
+  int		i;
+  int		s_l;
+  int		num;
+
+  y = -1;
+  while (y++ < (int)wolf->k)
+    {
+      pos.x = x;
+      pos.y = y;
+      ok = is_alpha_img(p->x, p->y, img, &pos);
+      if (ok == 0 && p->x > 0 && p->x < WIDTH && p->y > 0 && p->y < HEIGHT)
+	{
+	  i = 0;
+	  while (i < img->bpp / 8)
+	    {
+	      s_l = (img->size_line *(int)y) + ((int)x * img->bpp/8) + i;
+	      num = (wolf->size_line * p->y) + (p->x * wolf->bpp/8) + i++;
+	      wolf->data[num] = img->data[s_l];
+	    }
+	}
+      p->y += 1;
+    }
+}
+
+void	my_put_all_img(t_image *img, t_wolf *wolf, t_i_point *p, int size)
+{
+  int	x;
+  int	y;
+  int	sauv_y;
+
+  wolf->k = size;
+  sauv_y = p->y;
+  x = 0;
+  while (x < size)
+    {
+      y = 0;
+      p->y = sauv_y;
+      put_all_img_two(x, img, wolf, p);
+      p->x += 1;
+      x++;
+    }
+}

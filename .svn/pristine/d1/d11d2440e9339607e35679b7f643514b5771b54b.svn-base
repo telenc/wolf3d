@@ -1,0 +1,8 @@
+
+--This line, and those below, will be ignored--
+
+M    texture/2.xpm
+M    texture/3.xpm
+M    lib/my_put_pixel_two.c
+M    includes/wolf.h
+M    fenetre.c

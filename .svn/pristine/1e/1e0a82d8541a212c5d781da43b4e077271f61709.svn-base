@@ -1,0 +1,15 @@
+/*
+** my_putchar.c for my_putchar in /home/telenc_r/rendu/wolf/includes
+** 
+** Made by telenc_r
+** Login   <telenc_r@telenc>
+** 
+** Started on  Fri Dec 21 11:32:37 2012 telenc_r
+** Last update Fri Dec 21 11:33:00 2012 telenc_r
+*/
+
+void	my_putchar(char c)
+{
+  if (write(1, &c, 1))
+    error_write();
+}

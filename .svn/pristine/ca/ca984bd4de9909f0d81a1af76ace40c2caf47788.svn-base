@@ -1,0 +1,14 @@
+/*
+** my_putmap.c for my_putmap in /home/telenc_r/rendu/wolf
+** 
+** Made by telenc_r
+** Login   <telenc_r@telenc>
+** 
+** Started on  Sun Jan  6 16:19:19 2013 telenc_r
+** Last update Sun Jan  6 16:19:45 2013 telenc_r
+*/
+
+#include	<stdlib.h>
+#include	"wolf.h"
+
+void	my_putmap(t_map **map)

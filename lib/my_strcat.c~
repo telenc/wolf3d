@@ -1,0 +1,39 @@
+/*
+** my_strcat.c for my_strcat in /home/telenc_r/rendu/minishell1
+** 
+** Made by telenc_r
+** Login   <telenc_r@telenc>
+** 
+** Started on  Thu Dec 13 15:51:11 2012 telenc_r
+** Last update Tue Dec 18 14:48:37 2012 telenc_r
+*/
+
+#include	<stdlib.h>
+#include	"mini_s1.h"
+
+char	*my_strcat(char *st1, char *st2, int f)
+{
+  char	*result;
+  int	i;
+  int	j;
+
+  result = my_malloc(sizeof(char) * (my_strlen(st1) + my_strlen(st2) + 1));
+  i = 0;
+  j = 0;
+  while (st1[i] != '\0')
+    result[j++] = st1[i++];
+  i = 0;
+  while (st2[i] != '\0')
+    result[j++] = st2[i++];
+  result[j] = '\0';
+  if (f == 1)
+    free(st1);
+  else if (f == 2)
+    free(st2);
+  else if (f == 3)
+    {
+      free(st1);
+      free(st2);
+    }
+  return (result);
+}
